@@ -29,6 +29,14 @@ def computeNodeDepths(adj):
         if np.max(node_depth) == adj.shape[0]:
             raise Exception('Circular Link!')
     
+    node_to_idx = {x: i for i, x in enumerate(adj.index.to_list())}
+    decoy_depth = max([node_depth[node_to_idx[x]] for x in node_to_idx if "decoy" in x.lower()])
+    max_depth = max(node_depth)
+    for x in node_to_idx:
+        if "target" in x.lower():
+            node_depth[node_to_idx[x]] = decoy_depth
+        if "discard" in x.lower() or "held out" in x.lower():
+            node_depth[node_to_idx[x]] = max_depth
     return node_depth
 
 
@@ -40,7 +48,7 @@ def computeNodePositions(df, aspect_ratio, plotOrder, nodemodifier):
     idx = adj.columns.union(adj.index)
     adj = adj.reindex(index = idx, columns=idx, fill_value=0)
     
-    vertical_gap_quotient = 0.05
+    vertical_gap_quotient = 0.08
     nodes = pd.DataFrame({'name': adj.index})
     nodes['depth'] = computeNodeDepths(adj)
     nodes['plotOrder'] = nodes.name.map(plotOrder)
@@ -60,11 +68,32 @@ def computeNodePositions(df, aspect_ratio, plotOrder, nodemodifier):
         num_nodes = np.sum(nodes.depth == d)
         nodes.loc[nodes.depth == d, 'y'] += (nodes[nodes.depth == d].shift(1)['height'].cumsum() + np.arange(num_nodes) * vertical_gap_quotient * max(in_max, out_max)).fillna(0)
     #nodes['y'] = -nodes['y']-nodes['height']
-    
+
+
     for k in list(nodemodifier):
         if 'yPush' in nodemodifier[k]:
             nodes.loc[nodes.name == k, 'y'] += nodemodifier[k]['yPush']
-    
+
+    nodes.reset_index(drop=True, inplace=True)
+    mapp = {df['target'].iloc[i]: df['customY'].iloc[i] for i in range(len(df['target']))}
+    node_y = nodes.set_index('name').to_dict()['y']
+    for i in range(len(nodes)):
+        if nodes.iloc[i]['name'] in mapp and not pd.isna(mapp[nodes.iloc[i]['name']]):
+            cust_y_str = mapp[nodes.iloc[i]['name']]
+            if isinstance(cust_y_str, str):
+                if "+" not in cust_y_str and "-" not in cust_y_str:
+                    nodes.at[i, 'y'] = node_y[cust_y_str]
+                elif "@" in cust_y_str:
+                    if "+" in cust_y_str:
+                        nodes.at[i, 'y'] = float(cust_y_str.split("+")[1]) + node_y[cust_y_str.split("+")[0].replace("@", "")]
+                    elif "-" in cust_y_str:
+                        nodes.at[i, 'y'] = -float(cust_y_str.split("-")[1]) + node_y[cust_y_str.split("-")[0].replace("@", "")]
+                elif "+" in cust_y_str:
+                    nodes.at[i, 'y'] += float(cust_y_str.replace("+", ""))
+                elif "-" in cust_y_str:
+                    nodes.at[i, 'y'] -= float(cust_y_str.replace("-", ""))
+            elif type(cust_y_str) in [int, float]:
+                nodes.at[i, 'y'] = cust_y_str
     return nodes
 
 
@@ -75,10 +104,10 @@ def getNodesAndLinks(df, aspect_ratio, plotOrder, nodemodifier):
     nodes = computeNodePositions(df, aspect_ratio, plotOrder, nodemodifier)
     links['source_depth'] = links['source'].map(dict(zip(nodes['name'], nodes['depth'])))
     links['target_depth'] = links['target'].map(dict(zip(nodes['name'], nodes['depth'])))
-    links['source_y'] = links['source'].map(dict(zip(nodes['name'], nodes['y'])))
-    links['target_y'] = links['target'].map(dict(zip(nodes['name'], nodes['y'])))
+    links['sourcePlotOrder'] = links['source'].map(dict(zip(nodes['name'], nodes['plotOrder'])))
+    links['targetPlotOrder'] = links['target'].map(dict(zip(nodes['name'], nodes['plotOrder'])))
     links['depth'] = links['target_depth'] - links['source_depth']
-    links.sort_values(['depth', 'source_y', 'target_y'], inplace=True)
+    links.sort_values(['depth', 'sourcePlotOrder', 'targetPlotOrder'], inplace=True)
     nodes['in_y'] = nodes['out_y'] = nodes['y']
     
     return nodes, links
@@ -88,7 +117,14 @@ def getNodesAndLinks(df, aspect_ratio, plotOrder, nodemodifier):
 ''' Plot the sankey diagram '''
 def sankey(df, aspect_ratio=4/3, nodelabels=True, linklabels=True, labelsize=5, nodecmap=None, nodecolorby='level', nodealpha=0.5, nodeedgecolor='white', plotOrder={}, nodemodifier={}):
     nodes, links = getNodesAndLinks(df, aspect_ratio, plotOrder, nodemodifier)
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize = (aspect_ratio*8, 8))
+    for j, r in nodes.iterrows():
+        if "Fake" in r['name']:
+            nodes.drop(j, inplace=True)
+
+        for j, r in links.iterrows():
+            if "Fake" in r['source'] or "Fake" in r['target']:
+                links.drop(j, inplace=True)
         
     # plot the links
     for i, link in links.iterrows():
@@ -96,6 +132,13 @@ def sankey(df, aspect_ratio=4/3, nodelabels=True, linklabels=True, labelsize=5, 
         endx = (nodes[nodes.name==link.target]['x']).values[0]
         starty = (nodes[nodes.name==link.source]['out_y']).values[0]
         endy = (nodes[nodes.name==link.target]['in_y']).values[0]
+        if not pd.isnull(linkAt := df[(df.source==link.source) & (df.target==link.target)]['linkAt'].values.item()):
+            linkAt =linkAt.split("@")
+            row = nodes[(nodes.name == linkAt[0])]
+            startx = row['x'].values.item() + nodes['width'].values[0]
+            starty = row['y'].values.item()
+            nodes.at[nodes[(nodes.name == linkAt[0])].index.item(), 'height'] = row['inflow'].values[0]
+            print("Went In")
         nodes.loc[nodes.name==link.source, 'out_y'] = starty + link['value']
         nodes.loc[nodes.name==link.target, 'in_y'] = endy + link['value']
         linkstretchx = endx - startx
@@ -166,14 +209,15 @@ def sankey(df, aspect_ratio=4/3, nodelabels=True, linklabels=True, labelsize=5, 
     
     if nodelabels:
         for i, row in lcnodes.iterrows():
-            ax.text(row['x'] + row['width'] * 1.2, row['y'] + row['height'] / 2, labelmod[row['name']]['label'] + ' ' + str(row['height']), fontsize=labelsize, va='center')
+            ax.text(row['x'] + row['width'] * 1.2, row['y'] + row['height'] / 2, labelmod[row['name']]['label'].replace("\\n", '\n') + ': ' + str(row['height']), fontsize=labelsize, va='center')
         for i, row in lunodes.iterrows():
-            ax.text(row['x'] + row['width'] * 1.2, row['y'] + row['height'] / 2, row['name'] + ' ' + str(row['height']), fontsize=labelsize, va='center')
+            ax.text(row['x'] + row['width'] * 1.2, row['y'] + row['height'] / 2, row['name'].replace("\\n", '\n') + ': ' + str(row['height']), fontsize=labelsize, va='center')
     
     plt.axis('scaled')
     plt.axis('off')
+    nodes = nodes.drop(['in_y', 'out_y'], axis=1, inplace=False)
     
-    return nodes.drop(['in_y', 'out_y'], axis=1), fig, ax
+    return nodes, fig, ax
 
 
 
