@@ -1,4 +1,4 @@
-<img src="https://github.com/mandalsubhajit/psankey/blob/master/pSankey.png" width="100">
+<img src="https://github.com/Ben-Drucker/psankey-modified/blob/master/pSankey.png" width="100">
 
 
 # psankey - A module for plotting Sankey flow diagrams in Python
@@ -52,7 +52,7 @@ E,A,20,,
 D,A,40,orange,0.85
 ```
 Output:<br/>
-<img src="https://github.com/mandalsubhajit/psankey/blob/master/output/sankey1.png" width="1000">
+<img src="https://github.com/Ben-Drucker/psankey-modified/blob/master/output/sankey1.png" width="1000">
 
 #### Usage
 
@@ -91,10 +91,10 @@ plt.show()
 
 ### Sample Output
 
-<img src="https://github.com/mandalsubhajit/psankey/blob/master/output/sankey1.png" width="1000">
+<img src="https://github.com/Ben-Drucker/psankey-modified/blob/master/output/sankey1.png" width="1000">
 
-<img src="https://github.com/mandalsubhajit/psankey/blob/master/output/sankey2.png" width="1000">
+<img src="https://github.com/Ben-Drucker/psankey-modified/blob/master/output/sankey2.png" width="1000">
 
 ## Citing **pSankey**
 
-To cite the library if you use it in scientific publications (or anywhere else, if you wish), please use the link to the GitHub repository (https://github.com/mandalsubhajit/pSankey). Thank you!
+To cite the library if you use it in scientific publications (or anywhere else, if you wish), please use the link to the GitHub repository (https://github.com/Ben-Drucker/psankey-modified). Thank you!

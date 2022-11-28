@@ -1,8 +1,8 @@
 README.md
 setup.py
-psankey/__init__.py
-psankey/sankey.py
-psankey.egg-info/PKG-INFO
-psankey.egg-info/SOURCES.txt
-psankey.egg-info/dependency_links.txt
-psankey.egg-info/top_level.txt
+psankey_modified/__init__.py
+psankey_modified/sankey.py
+psankey_modified.egg-info/PKG-INFO
+psankey_modified.egg-info/SOURCES.txt
+psankey_modified.egg-info/dependency_links.txt
+psankey_modified.egg-info/top_level.txt

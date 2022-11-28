@@ -1,12 +1,12 @@
 Metadata-Version: 2.1
-Name: psankey
+Name: psankey_modified
 Version: 1.0.1
 Summary: Package for plotting Sankey diagrams with Python
-Home-page: https://github.com/mandalsubhajit/psankey
+https://github.com/Ben-Drucker/psankey-modified
 Author: Subhajit Mandal
 Author-email: mandalsubhajit@gmail.com
 License: UNKNOWN
-Description: <img src="https://github.com/mandalsubhajit/psankey/blob/master/pSankey.png" width="100">
+Description: <img src="https://github.com/Ben-Drucker/psankey-modified/blob/master/pSankey.png" width="100">
         
         
         # psankey - A module for plotting Sankey flow diagrams in Python
@@ -34,7 +34,7 @@ Description: <img src="https://github.com/mandalsubhajit/psankey/blob/master/pSa
         
         ### Documentation
         
-        Please visit [https://github.com/mandalsubhajit/psankey]
+        Please visit [https://github.com/Ben-Drucker/psankey-modified]
         
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3

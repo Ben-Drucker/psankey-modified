@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="psankey",
+    name="psankey_modified",
     version="1.0.1",
     author="Subhajit Mandal",
     author_email="mandalsubhajit@gmail.com",
     description="Package for plotting Sankey diagrams with Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/mandalsubhajit/psankey",
+    url="https://github.com/Ben-Drucker/psankey-modified",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
